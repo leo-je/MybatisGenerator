@@ -3,9 +3,8 @@ package cn.je.MybatisGenerator;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
+import java.sql.*;
+import java.util.*;
 
 import cn.je.MybatisGenerator.generator.ServiceGenertor;
 import org.mybatis.generator.api.MyBatisGenerator;
@@ -27,27 +26,19 @@ public class GenMain {
         Configuration config = null;
         try {
             config = cfgParser.parseConfiguration(configFile);
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (XMLParserException e) {
-            e.printStackTrace();
-        }
-        DefaultShellCallback callback = new DefaultShellCallback(overwrite);
-        MyBatisGenerator generator = null;
-        try {
+
+            DefaultShellCallback callback = new DefaultShellCallback(overwrite);
+            MyBatisGenerator generator = null;
             generator = new MyBatisGenerator(config, callback, warnings);
-        } catch (InvalidConfigurationException e) {
-            e.printStackTrace();
-        }
-        try {
+
             generator.generate(null);
             System.out.println("mybatis 代码生成成功。。。");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        try {
             new ServiceGenertor().genCode();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

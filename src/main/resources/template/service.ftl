@@ -32,7 +32,7 @@ public interface ${domainObjectName}Service {
      * 通过主鍵刪除
      * @param id
      */
-    void deleteById(String id);
+    void deleteById(${primaryKey} id);
 
     /**
      * 更新
@@ -45,7 +45,7 @@ public interface ${domainObjectName}Service {
      * @param id
      * @return
      */
-    ${domainObjectName} findById(String id);
+    ${domainObjectName} findById(${primaryKey} id);
 
     /**
      * 根据条件查找

@@ -8,10 +8,9 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.InputStream;
+import java.sql.*;
+import java.util.*;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
 
 public class ServiceGenertor {
 
@@ -35,9 +34,11 @@ public class ServiceGenertor {
             data.put("packagePath", prop.getProperty("mudolePath") + ".service");
             data.put("modelPackageSuffix", prop.getProperty("modelPackageSuffix"));
             data.put("daoMapperPackageSuffix", prop.getProperty("daoMapperPackageSuffix"));
+            //---------------------获取主键类型
+            data.put("primaryKey", getPrimaryKeyType(prop));
             //---------------------引入freemarker配置
             Configuration cfg = getConfig(prop);
-            //---------------------生产service文件
+            //---------------------生成service文件
             Template temp = cfg.getTemplate("service.ftl");
             String fileName = serviceName + ".java";
             String mp = prop.getProperty("mudolePath");
@@ -52,7 +53,7 @@ public class ServiceGenertor {
             temp.process(data, bw);
             System.out.println("service 接口文件生成成功");
 
-            //---------------------生产serviceimpl文件
+            //---------------------生成serviceimpl文件
             data.put("packagePath", data.get("packagePath") + ".impl");
             temp = cfg.getTemplate("serviceImpl.ftl");
             fileName = serviceName + "Impl.java";
@@ -81,12 +82,64 @@ public class ServiceGenertor {
         return cfg;
     }
 
+
+    String getPrimaryKeyType(Properties prop) {
+        Connection conn = null;
+        try {
+            conn = getConn(prop);
+            DatabaseMetaData dbmd = getDbmd(conn);
+            ResultSet columns = dbmd.getColumns(null, "%", prop.getProperty("tableName"), "%");
+            Map<String, String> cl = new HashMap<>();
+            while (columns.next()) {
+                cl.put(columns.getString("COLUMN_NAME"), columns.getString("TYPE_NAME"));
+            }
+            if (cl.size() <= 0) {
+                return "String";
+            }
+            ResultSet primaryKeyResultSet = dbmd.getPrimaryKeys(null, null, prop.getProperty("tableName"));
+            String p_name = "";
+            while (primaryKeyResultSet.next()) {
+                p_name = primaryKeyResultSet.getString("PK_NAME");
+            }
+            if (!"".equals(p_name)) {
+                String type = cl.get(p_name).toUpperCase();
+                switch (type) {
+                    case "VARCHAR":
+                        return "String";
+                    case "INT":
+                        return "Integer";
+                    default:
+                        return "String";
+                }
+            }
+            return "String";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "String";
+        }
+    }
+
+
+    public Connection getConn(Properties prop) throws SQLException, ClassNotFoundException, IllegalAccessException, InstantiationException {
+        Properties props = new Properties();
+        props.put("user", prop.getProperty("jdbc_username"));
+        props.put("remarksReporting", "true");
+        props.put("password", prop.getProperty("jdbc_password"));
+        Driver driver = (Driver) Class.forName(prop.getProperty("jdbc_driver")).newInstance();
+        return driver.connect(prop.getProperty("jdbc_url"), props);
+    }
+
+    public DatabaseMetaData getDbmd(Connection conn) throws SQLException {
+        DatabaseMetaData dbmd = conn.getMetaData();
+        return dbmd;
+    }
+
     /**
      * 加载配置文件
      *
      * @return
      */
-    private static Properties loadProperties() {
+    public static Properties loadProperties() {
         Properties prop = null;
         try {
             prop = new Properties();

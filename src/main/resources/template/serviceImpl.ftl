@@ -38,7 +38,7 @@ public  class ${domainObjectName}ServiceImpl implements ${domainObjectName}Servi
         }
     }
 
-    public void deleteById(String id) {
+    public void deleteById(${primaryKey} id) {
         mapper.deleteByPrimaryKey(id);
     }
 
@@ -46,7 +46,7 @@ public  class ${domainObjectName}ServiceImpl implements ${domainObjectName}Servi
         mapper.updateByPrimaryKeySelective(model);
     }
 
-    public ${domainObjectName} findById(String id) {
+    public ${domainObjectName} findById(${primaryKey} id) {
         return mapper.selectByPrimaryKey(id);
     }
 
